@@ -172,7 +172,19 @@ extractQueries:
 	// Check candidate packages for containFiles.
 	if len(containFiles) > 0 {
 		for _, id := range containsCandidates {
-			pkg := response.seenPackages[id]
+			pkg, ok := response.seenPackages[id]
+			if !ok {
+				response.addPackage(&Package{
+					ID: id,
+					Errors: []Error{
+						{
+							Kind: ListError,
+							Msg:  fmt.Sprintf("package %s expected but not seen", id),
+						},
+					},
+				})
+				continue
+			}
 			for _, f := range containFiles {
 				for _, g := range pkg.GoFiles {
 					if sameFile(f, g) {
@@ -217,7 +229,13 @@ func runContainsQueries(cfg *Config, driver driver, response *responseDeduper, q
 		}
 		dirResponse, err := driver(cfg, pattern)
 		if err != nil {
-			return err
+			// Couldn't find a package for the directory. Try to load the file as an ad-hoc package.
+			var queryErr error
+			dirResponse, err = driver(cfg, query)
+			if queryErr != nil {
+				// Return the original error if the attempt to fall back failed.
+				return err
+			}
 		}
 		isRoot := make(map[string]bool, len(dirResponse.Roots))
 		for _, root := range dirResponse.Roots {
@@ -774,6 +792,22 @@ func invokeGo(cfg *Config, args ...string) (*bytes.Buffer, error) {
 		if len(stderr.String()) > 0 && strings.Contains(stderr.String(), "no such file or directory") {
 			output := fmt.Sprintf(`{"ImportPath": "command-line-arguments","Incomplete": true,"Error": {"Pos": "","Err": %q}}`,
 				strings.Trim(stderr.String(), "\n"))
+			return bytes.NewBufferString(output), nil
+		}
+
+		// Workaround for an instance of golang.org/issue/26755: go list -e  will return a non-zero exit
+		// status if there's a dependency on a package that doesn't exist. But it should return
+		// a zero exit status and set an error on that package.
+		if len(stderr.String()) > 0 && strings.Contains(stderr.String(), "no Go files in") {
+			// try to extract package name from string
+			stderrStr := stderr.String()
+			var importPath string
+			colon := strings.Index(stderrStr, ":")
+			if colon > 0 && strings.HasPrefix(stderrStr, "go build ") {
+				importPath = stderrStr[len("go build "):colon]
+			}
+			output := fmt.Sprintf(`{"ImportPath": %q,"Incomplete": true,"Error": {"Pos": "","Err": %q}}`,
+				importPath, strings.Trim(stderrStr, "\n"))
 			return bytes.NewBufferString(output), nil
 		}
 

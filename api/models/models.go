@@ -3,30 +3,42 @@ package models
 import (
 	"fmt"
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/santileira/go-graphql/errors"
+	"github.com/santileira/go-graphql/api/errors"
+
 	"io"
 	"strconv"
 	"time"
 )
 
-type Video struct {
-	ID          int       `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	UserID      string    `json:"-"`
-	URL         string    `json:"url"`
-	CreatedAt   time.Time `json:"createdAt"`
-	Related     []Video
+type Screenshot struct {
+	ID      int    `json:"id"`
+	VideoID int    `json:"videoId"`
+	URL     string `json:"url"`
 }
 
-// Lets redefine the base ID type to use an id as int
+type User struct {
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
+type Video struct {
+	ID          int           `json:"id"`
+	Name        string        `json:"name"`
+	Description string        `json:"description"`
+	UserID      int           `json:"-"`
+	URL         string        `json:"url"`
+	CreatedAt   time.Time     `json:"createdAt"`
+	Screenshots []*Screenshot `json:"screenshots"`
+	Related     []*Video      `json:"related"`
+}
+
 func MarshalID(id int) graphql.Marshaler {
 	return graphql.WriterFunc(func(w io.Writer) {
 		io.WriteString(w, strconv.Quote(fmt.Sprintf("%d", id)))
 	})
 }
 
-// And the same for the unmarshaler
 func UnmarshalID(v interface{}) (int, error) {
 	id, ok := v.(string)
 	if !ok {

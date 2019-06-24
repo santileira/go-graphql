@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:d28d302ab337b9ea3af38c04429e198ab422c1e026592aebcf7aec66ebbc4645"
+  digest = "1:36a35bcd0d31f5082578d975e0c23e5e14c98be262b3832fc2c30f35ca5fc776"
   name = "github.com/99designs/gqlgen"
   packages = [
     "api",
@@ -22,8 +22,8 @@
     "plugin/servergen",
   ]
   pruneopts = "UT"
-  revision = "010a79b66f08732cb70d133dcab297a8ee895572"
-  version = "v0.8.3"
+  revision = "ea4652d223c441dc77b31882781ce08488763d67"
+  version = "v0.9.0"
 
 [[projects]]
   digest = "1:786e862ec180708b60ee670723e3edd969fd4309e7b1c315cd7de058ac62a011"
@@ -51,18 +51,6 @@
   pruneopts = "UT"
   revision = "7087cb70de9f7a8bc0a10c375cb0d2280a8edf9c"
   version = "v0.5.1"
-
-[[projects]]
-  digest = "1:bc1c0be40c67b6b4aee09d7508d5a2a52c1c116b1fa43806dad2b0d6b4d4003b"
-  name = "github.com/lib/pq"
-  packages = [
-    ".",
-    "oid",
-    "scram",
-  ]
-  pruneopts = "UT"
-  revision = "51e2106eed1cea199c802d2a49e91e2491b02056"
-  version = "v1.1.0"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
@@ -98,7 +86,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:93f3f17886abf8d17ff07ece88d6e1974226f5638d216041bd2234ca03ef848c"
+  digest = "1:63b1278173f07936a9cfe1738be66fdbe98f25f889eb60cb3ad9ab5c8a2e5ed3"
   name = "golang.org/x/tools"
   packages = [
     "go/ast/astutil",
@@ -110,11 +98,12 @@
     "imports",
     "internal/fastwalk",
     "internal/gopathwalk",
+    "internal/imports",
     "internal/module",
     "internal/semver",
   ]
   pruneopts = "UT"
-  revision = "23463209683dad3f2b9cc7f7c2663e1847c59017"
+  revision = "da514acc4774e511ba0c2955844e655a5b20938c"
 
 [[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
@@ -127,14 +116,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  input-imports = [
-    "github.com/99designs/gqlgen/cmd",
-    "github.com/99designs/gqlgen/graphql",
-    "github.com/99designs/gqlgen/graphql/introspection",
-    "github.com/99designs/gqlgen/handler",
-    "github.com/lib/pq",
-    "github.com/vektah/gqlparser",
-    "github.com/vektah/gqlparser/ast",
-  ]
+  input-imports = ["github.com/99designs/gqlgen/cmd"]
   solver-name = "gps-cdcl"
   solver-version = 1

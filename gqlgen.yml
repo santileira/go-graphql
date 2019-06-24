@@ -13,9 +13,13 @@ resolver:
   filename: resolver.go
   type: Resolver
 models:
+  Screenshot:
+    model: github.com/santileira/go-graphql/api/models.Screenshot
+  User:
+    model: github.com/santileira/go-graphql/api/models.User
   Video:
-    model: github.com/santileira/go-graphql/models/models.Video
+    model: github.com/santileira/go-graphql/api/models.Video
   ID:
-    model: github.com/santileira/go-graphql/models/models.ID
+    model: github.com/santileira/go-graphql/api/models.ID
   Timestamp:
-    model: github.com/santileira/go-graphql/models/models.Timestamp
+    model: github.com/santileira/go-graphql/api/models.Timestamp

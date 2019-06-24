@@ -28,12 +28,23 @@ input NewVideo {
     url: String!
 }
 
+input NewUser {
+    name: String!
+    email: String!
+}
+
 type Mutation {
     createVideo(input: NewVideo!): Video!
+    createUser(user: NewUser!): User!
 }
 
 type Query {
-    Videos(limit: Int = 25, offset: Int = 0): [Video!]!
+    Videos: [Video!]!
+    Users: [User!]!
+}
+
+type Subscription {
+    videoPublished: Video!
 }
 
 scalar Timestamp

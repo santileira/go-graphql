@@ -2,72 +2,137 @@ package go_graphql
 
 import (
 	"context"
-	"database/sql"
-	"github.com/santileira/go-graphql/database"
-	"github.com/santileira/go-graphql/errors"
-	"github.com/santileira/go-graphql/models"
+	"github.com/santileira/go-graphql/api/models"
+	"math/rand"
+	"strconv"
 	"time"
 ) // THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
 
+var videoPublishedChannel map[string]chan *models.Video
+
+func init() {
+	videoPublishedChannel = map[string]chan *models.Video{}
+}
+
 type Resolver struct {
-	db *sql.DB
+	videos []*models.Video
+	users  []*models.User
 }
 
 func (r *Resolver) Mutation() MutationResolver {
 	return &mutationResolver{r}
 }
+
 func (r *Resolver) Query() QueryResolver {
 	return &queryResolver{r}
 }
 
+func (r *Resolver) Video() VideoResolver {
+	return &videoResolver{r}
+}
+
+func (r *Resolver) Subscription() SubscriptionResolver {
+	return &subscriptionResolver{r}
+}
+
+// ******** MUTATION ********
 type mutationResolver struct {
 	*Resolver
 }
 
-func (r *mutationResolver) CreateVideo(ctx context.Context, input NewVideo) (models.Video, error) {
-	newVideo := models.Video{
-		URL:       input.URL,
-		Name:      input.Name,
-		CreatedAt: time.Now().UTC(),
+func (r *mutationResolver) CreateVideo(ctx context.Context, input NewVideo) (*models.Video, error) {
+
+	video := &models.Video{
+		ID:          rand.Int(),
+		Name:        input.Name,
+		Description: input.Description,
+		UserID:      input.UserID,
+		URL:         input.URL,
+		CreatedAt:   time.Now(),
 	}
 
-	rows, err := database.LogAndQuery(r.db, "INSERT INTO videos (name, url, user_id, created_at) VALUES($1, $2, $3, $4) RETURNING id",
-		input.Name, input.URL, input.UserID, newVideo.CreatedAt)
-	defer rows.Close()
+	r.videos = append(r.videos, video)
 
-	if err != nil || !rows.Next() {
-		return models.Video{}, err
-	}
-	if err := rows.Scan(&newVideo.ID); err != nil {
-		errors.DebugPrintf(err)
-		if errors.IsForeignKeyError(err) {
-			return models.Video{}, errors.UserNotExist
-		}
-		return models.Video{}, errors.InternalServerError
+	// notify new video
+	// add new video in videoPublishedChannel
+	for _, observer := range videoPublishedChannel {
+		observer <- video
+		// this sends new video to client via socket
 	}
 
-	return newVideo, nil
+	return video, nil
 }
 
-type queryResolver struct{ *Resolver }
+func (r *mutationResolver) CreateUser(ctx context.Context, input NewUser) (*models.User, error) {
 
-func (r *queryResolver) Videos(ctx context.Context, limit *int, offset *int) ([]models.Video, error) {
-	var video models.Video
-	var videos []models.Video
+	id := rand.Int()
+	idString := strconv.Itoa(id)
 
-	rows, err := database.LogAndQuery(r.db, "SELECT id, name, url, created_at, user_id FROM videos ORDER BY created_at desc limit $1 offset $2", limit, offset)
-	defer rows.Close()
-	if err != nil {
-		errors.DebugPrintf(err)
-		return nil, errors.InternalServerError
+	user := &models.User{
+		ID:    id,
+		Name:  input.Name + "_" + idString,
+		Email: input.Email + "_" + idString,
 	}
-	for rows.Next() {
-		if err := rows.Scan(&video.ID, &video.Name, &video.URL, &video.CreatedAt, &video.UserID); err != nil {
-			errors.DebugPrintf(err)
-			return nil, errors.InternalServerError
+
+	r.users = append(r.users, user)
+	return user, nil
+}
+
+// ******** QUERY ********
+type queryResolver struct {
+	*Resolver
+}
+
+func (r *queryResolver) Videos(ctx context.Context) ([]*models.Video, error) {
+	return r.videos, nil
+}
+
+func (r *queryResolver) Users(ctx context.Context) ([]*models.User, error) {
+	return r.users, nil
+}
+
+// ******** VIDEO ********
+type videoResolver struct {
+	*Resolver
+}
+
+func (r *videoResolver) User(ctx context.Context, obj *models.Video) (*models.User, error) {
+	var userResult *models.User
+	for _, user := range r.users {
+		if user.ID == obj.UserID {
+			userResult = user
+			break
 		}
-		videos = append(videos, video)
 	}
 
-	return videos, nil
+	return userResult, nil
+}
+
+// ******** SUBSCRIPTION ********
+type subscriptionResolver struct {
+	*Resolver
+}
+
+func (r *subscriptionResolver) VideoPublished(ctx context.Context) (<-chan *models.Video, error) {
+	id := randString(8)
+
+	videoEvent := make(chan *models.Video, 1)
+	go func() {
+		<-ctx.Done()
+		delete(videoPublishedChannel, id)
+	}()
+
+	videoPublishedChannel[id] = videoEvent
+
+	return videoEvent, nil
+}
+
+var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func randString(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+	return string(b)
 }
