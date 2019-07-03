@@ -29,4 +29,6 @@ modify gqlgen.yml
 Regenerate the code by running: go run scripts/gqlgen.go -v.
 
 
+generate dataloader: `go run github.com/vektah/dataloaden UserLoader string github.com/santileira/go-graphql/api/models.User`
+
 

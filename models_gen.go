@@ -2,6 +2,12 @@
 
 package go_graphql
 
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
 type NewUser struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
@@ -12,4 +18,47 @@ type NewVideo struct {
 	Description string `json:"description"`
 	UserID      int    `json:"userId"`
 	URL         string `json:"url"`
+}
+
+type Role string
+
+const (
+	RoleAdmin Role = "ADMIN"
+	RoleUser  Role = "USER"
+	RoleTest  Role = "TEST"
+)
+
+var AllRole = []Role{
+	RoleAdmin,
+	RoleUser,
+	RoleTest,
+}
+
+func (e Role) IsValid() bool {
+	switch e {
+	case RoleAdmin, RoleUser, RoleTest:
+		return true
+	}
+	return false
+}
+
+func (e Role) String() string {
+	return string(e)
+}
+
+func (e *Role) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Role(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Role", str)
+	}
+	return nil
+}
+
+func (e Role) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

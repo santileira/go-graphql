@@ -2,6 +2,9 @@ package go_graphql
 
 import (
 	"context"
+	"fmt"
+	"github.com/santileira/go-graphql/api/database"
+	"github.com/santileira/go-graphql/api/dataloaders/user"
 	"github.com/santileira/go-graphql/api/models"
 	"math/rand"
 	"strconv"
@@ -15,8 +18,6 @@ func init() {
 }
 
 type Resolver struct {
-	videos []*models.Video
-	users  []*models.User
 }
 
 func (r *Resolver) Mutation() MutationResolver {
@@ -41,7 +42,7 @@ type mutationResolver struct {
 }
 
 func (r *mutationResolver) CreateVideo(ctx context.Context, input NewVideo) (*models.Video, error) {
-
+	fmt.Println("Creando video")
 	video := &models.Video{
 		ID:          rand.Int(),
 		Name:        input.Name,
@@ -51,7 +52,7 @@ func (r *mutationResolver) CreateVideo(ctx context.Context, input NewVideo) (*mo
 		CreatedAt:   time.Now(),
 	}
 
-	r.videos = append(r.videos, video)
+	database.AddVideo(video)
 
 	// notify new video
 	// add new video in videoPublishedChannel
@@ -64,7 +65,7 @@ func (r *mutationResolver) CreateVideo(ctx context.Context, input NewVideo) (*mo
 }
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input NewUser) (*models.User, error) {
-
+	fmt.Println("Creando usuario")
 	id := rand.Int()
 	idString := strconv.Itoa(id)
 
@@ -74,7 +75,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input NewUser) (*mode
 		Email: input.Email + "_" + idString,
 	}
 
-	r.users = append(r.users, user)
+	database.AddUser(user)
 	return user, nil
 }
 
@@ -84,11 +85,13 @@ type queryResolver struct {
 }
 
 func (r *queryResolver) Videos(ctx context.Context) ([]*models.Video, error) {
-	return r.videos, nil
+	fmt.Println("Devolviendo videos")
+	return database.Videos(), nil
 }
 
 func (r *queryResolver) Users(ctx context.Context) ([]*models.User, error) {
-	return r.users, nil
+	fmt.Println("Devolviendo usuarios")
+	return database.Users(), nil
 }
 
 // ******** VIDEO ********
@@ -97,15 +100,18 @@ type videoResolver struct {
 }
 
 func (r *videoResolver) User(ctx context.Context, obj *models.Video) (*models.User, error) {
-	var userResult *models.User
-	for _, user := range r.users {
+	fmt.Println("Devolviendo usuario a partir de video")
+	/*var userResult *models.User
+	for _, user := range database.Users() {
 		if user.ID == obj.UserID {
 			userResult = user
 			break
 		}
 	}
 
-	return userResult, nil
+	return userResult, nil*/
+	user, err := userdataloader.ForContext(ctx).Load(obj.UserID)
+	return &user, err
 }
 
 // ******** SUBSCRIPTION ********
@@ -114,6 +120,7 @@ type subscriptionResolver struct {
 }
 
 func (r *subscriptionResolver) VideoPublished(ctx context.Context) (<-chan *models.Video, error) {
+	fmt.Println("Subscribiendome a la creación de un video")
 	id := randString(8)
 
 	videoEvent := make(chan *models.Video, 1)

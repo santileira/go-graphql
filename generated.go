@@ -44,6 +44,7 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
+	HasRole func(ctx context.Context, obj interface{}, next graphql.Resolver, role []Role) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -346,6 +347,24 @@ func (ec *executionContext) FieldMiddleware(ctx context.Context, obj interface{}
 			ret = nil
 		}
 	}()
+	rctx := graphql.GetResolverContext(ctx)
+	for _, d := range rctx.Field.Definition.Directives {
+		switch d.Name {
+		case "hasRole":
+			if ec.directives.HasRole != nil {
+				rawArgs := d.ArgumentMap(ec.Variables)
+				args, err := ec.dir_hasRole_args(ctx, rawArgs)
+				if err != nil {
+					ec.Error(ctx, err)
+					return nil
+				}
+				n := next
+				next = func(ctx context.Context) (interface{}, error) {
+					return ec.directives.HasRole(ctx, obj, n, args["role"].([]Role))
+				}
+			}
+		}
+	}
 	res, err := ec.ResolverMiddleware(ctx, next)
 	if err != nil {
 		ec.Error(ctx, err)
@@ -405,7 +424,7 @@ input NewUser {
 }
 
 type Mutation {
-    createVideo(input: NewVideo!): Video!
+    createVideo(input: NewVideo!): Video! @hasRole(role: [ADMIN, USER])
     createUser(user: NewUser!): User!
 }
 
@@ -418,12 +437,35 @@ type Subscription {
     videoPublished: Video!
 }
 
-scalar Timestamp`},
+scalar Timestamp
+
+directive @hasRole(role: [Role!]!) on FIELD_DEFINITION
+
+enum Role {
+    ADMIN
+    USER
+    TEST
+}
+`},
 )
 
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) dir_hasRole_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []Role
+	if tmp, ok := rawArgs["role"]; ok {
+		arg0, err = ec.unmarshalNRole2ᚕgithubᚗcomᚋsantileiraᚋgoᚑgraphqlᚐRole(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["role"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -2542,6 +2584,72 @@ func (ec *executionContext) unmarshalNNewUser2githubᚗcomᚋsantileiraᚋgoᚑg
 
 func (ec *executionContext) unmarshalNNewVideo2githubᚗcomᚋsantileiraᚋgoᚑgraphqlᚐNewVideo(ctx context.Context, v interface{}) (NewVideo, error) {
 	return ec.unmarshalInputNewVideo(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNRole2githubᚗcomᚋsantileiraᚋgoᚑgraphqlᚐRole(ctx context.Context, v interface{}) (Role, error) {
+	var res Role
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNRole2githubᚗcomᚋsantileiraᚋgoᚑgraphqlᚐRole(ctx context.Context, sel ast.SelectionSet, v Role) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNRole2ᚕgithubᚗcomᚋsantileiraᚋgoᚑgraphqlᚐRole(ctx context.Context, v interface{}) ([]Role, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]Role, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNRole2githubᚗcomᚋsantileiraᚋgoᚑgraphqlᚐRole(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNRole2ᚕgithubᚗcomᚋsantileiraᚋgoᚑgraphqlᚐRole(ctx context.Context, sel ast.SelectionSet, v []Role) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRole2githubᚗcomᚋsantileiraᚋgoᚑgraphqlᚐRole(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {

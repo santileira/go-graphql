@@ -34,7 +34,7 @@ input NewUser {
 }
 
 type Mutation {
-    createVideo(input: NewVideo!): Video!
+    createVideo(input: NewVideo!): Video! @hasRole(role: [ADMIN, USER])
     createUser(user: NewUser!): User!
 }
 
@@ -48,3 +48,11 @@ type Subscription {
 }
 
 scalar Timestamp
+
+directive @hasRole(role: [Role!]!) on FIELD_DEFINITION
+
+enum Role {
+    ADMIN
+    USER
+    TEST
+}
