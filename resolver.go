@@ -2,6 +2,8 @@ package go_graphql
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/santileira/go-graphql/api/database"
 	"github.com/santileira/go-graphql/api/dataloaders/user"
@@ -41,31 +43,53 @@ type mutationResolver struct {
 	*Resolver
 }
 
+// CreateVideo adds video in database generating random id.
+// Verifies if user id exists, if isn't exist returns error.
 func (r *mutationResolver) CreateVideo(ctx context.Context, input NewVideo) (*models.Video, error) {
-	fmt.Println("Creando video")
+
+	fmt.Println("Handle request to create video")
+
+	user := database.Get(input.UserID)
+	if user == nil {
+		fmt.Println("User not exists")
+		return nil, errors.New("user not exists")
+	}
+
 	video := &models.Video{
 		ID:          rand.Int(),
 		Name:        input.Name,
 		Description: input.Description,
 		UserID:      input.UserID,
 		URL:         input.URL,
-		CreatedAt:   time.Now(),
+		CreatedAt:   time.Now().UTC(),
 	}
 
 	database.AddVideo(video)
 
+	videoJSON, err := json.Marshal(video)
+	if err != nil {
+		fmt.Println(fmt.Printf("Error marshalling video %s", err.Error()))
+		return nil, err
+	}
+
+	fmt.Println(fmt.Printf("Create video %s", string(videoJSON)))
+
+	/*
 	// notify new video
 	// add new video in videoPublishedChannel
 	for _, observer := range videoPublishedChannel {
 		observer <- video
 		// this sends new video to client via socket
-	}
+	}*/
 
 	return video, nil
 }
 
+// CreateUser adds user in database generating random id.
 func (r *mutationResolver) CreateUser(ctx context.Context, input NewUser) (*models.User, error) {
-	fmt.Println("Creando usuario")
+
+	fmt.Println("Handle request to create user")
+
 	id := rand.Int()
 	idString := strconv.Itoa(id)
 
@@ -76,6 +100,15 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input NewUser) (*mode
 	}
 
 	database.AddUser(user)
+
+	userJSON, err := json.Marshal(user)
+	if err != nil {
+		fmt.Println(fmt.Printf("Error marshalling user %s", err.Error()))
+		return nil, err
+	}
+
+	fmt.Println(fmt.Printf("Create user %s", string(userJSON)))
+
 	return user, nil
 }
 

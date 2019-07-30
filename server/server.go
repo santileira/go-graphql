@@ -13,7 +13,6 @@ import (
 	"github.com/santileira/go-graphql/api/errors"
 	"log"
 	"net/http"
-	"os"
 )
 
 const defaultPort = "8080"
@@ -21,11 +20,6 @@ const defaultPort = "8080"
 func main() {
 
 	router := chi.NewRouter()
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
-	}
-
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowCredentials: true,
@@ -62,7 +56,7 @@ func main() {
 
 	router.Handle("/", handler.Playground("GraphQL playground", "/query"))
 	router.Handle("/query", c.Handler(handler.GraphQL(go_graphql.NewExecutableSchema(config),
-		handler.ComplexityLimit(10),
+		handler.ComplexityLimit(100),
 		handler.WebsocketUpgrader(websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true
@@ -70,6 +64,6 @@ func main() {
 		}))),
 	)
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, router))
+	log.Printf("connect to http://localhost:%s/ for GraphQL playground", defaultPort)
+	log.Fatal(http.ListenAndServe(":"+defaultPort, router))
 }

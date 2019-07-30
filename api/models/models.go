@@ -23,14 +23,13 @@ type User struct {
 }
 
 type Video struct {
-	ID          int           `json:"id"`
-	Name        string        `json:"name"`
-	Description string        `json:"description"`
-	UserID      int           `json:"-"`
-	URL         string        `json:"url"`
-	CreatedAt   time.Time     `json:"createdAt"`
-	Screenshots []*Screenshot `json:"screenshots"`
-	Related     []*Video      `json:"related"`
+	ID          int       `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	UserID      int       `json:"-"`
+	URL         string    `json:"url"`
+	CreatedAt   time.Time `json:"createdAt"`
+	Related     []*Video  `json:"related"`
 }
 
 func MarshalID(id int) graphql.Marshaler {
@@ -48,17 +47,18 @@ func UnmarshalID(v interface{}) (int, error) {
 	return int(i), e
 }
 
-func MarshalTimestamp(t time.Time) graphql.Marshaler {
-	timestamp := t.Unix() * 1000
+const layoutFormat = "2006-01-02 15:04:05"
 
+func MarshalDateTime(t time.Time) graphql.Marshaler {
 	return graphql.WriterFunc(func(w io.Writer) {
-		io.WriteString(w, strconv.FormatInt(timestamp, 10))
+		io.WriteString(w, strconv.Quote(t.Format(layoutFormat)))
 	})
 }
 
-func UnmarshalTimestamp(v interface{}) (time.Time, error) {
-	if tmpStr, ok := v.(int); ok {
-		return time.Unix(int64(tmpStr), 0), nil
+func UnmarshalDateTime(v interface{}) (time.Time, error) {
+	if tmpStr, ok := v.(string); ok {
+		tmpTime, _ := time.Parse(layoutFormat, tmpStr)
+		return tmpTime, nil
 	}
 	return time.Time{}, errors.TimeStampError
 }

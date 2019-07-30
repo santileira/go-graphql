@@ -58,12 +58,6 @@ type ComplexityRoot struct {
 		Videos func(childComplexity int) int
 	}
 
-	Screenshot struct {
-		ID      func(childComplexity int) int
-		URL     func(childComplexity int) int
-		VideoID func(childComplexity int) int
-	}
-
 	Subscription struct {
 		VideoPublished func(childComplexity int) int
 	}
@@ -80,7 +74,6 @@ type ComplexityRoot struct {
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Related     func(childComplexity int, limit *int, offset *int) int
-		Screenshots func(childComplexity int) int
 		URL         func(childComplexity int) int
 		User        func(childComplexity int) int
 	}
@@ -154,27 +147,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Videos(childComplexity), true
 
-	case "Screenshot.id":
-		if e.complexity.Screenshot.ID == nil {
-			break
-		}
-
-		return e.complexity.Screenshot.ID(childComplexity), true
-
-	case "Screenshot.url":
-		if e.complexity.Screenshot.URL == nil {
-			break
-		}
-
-		return e.complexity.Screenshot.URL(childComplexity), true
-
-	case "Screenshot.videoId":
-		if e.complexity.Screenshot.VideoID == nil {
-			break
-		}
-
-		return e.complexity.Screenshot.VideoID(childComplexity), true
-
 	case "Subscription.videoPublished":
 		if e.complexity.Subscription.VideoPublished == nil {
 			break
@@ -242,13 +214,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Video.Related(childComplexity, args["limit"].(*int), args["offset"].(*int)), true
-
-	case "Video.screenshots":
-		if e.complexity.Video.Screenshots == nil {
-			break
-		}
-
-		return e.complexity.Video.Screenshots(childComplexity), true
 
 	case "Video.url":
 		if e.complexity.Video.URL == nil {
@@ -388,27 +353,20 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var parsedSchema = gqlparser.MustLoadSchema(
-	&ast.Source{Name: "schema.graphql", Input: `type User {
-    id: ID!
-    name: String!
-    email: String!
-}
-
-type Video {
+	&ast.Source{Name: "schema.graphql", Input: `type Video {
     id: ID!
     name: String!
     description: String!
     user: User!
     url: String!
-    createdAt: Timestamp!
-    screenshots: [Screenshot]
+    createdAt: DateTime!
     related(limit: Int = 25, offset: Int = 0): [Video!]!
 }
 
-type Screenshot {
+type User {
     id: ID!
-    videoId: ID!
-    url: String!
+    name: String!
+    email: String!
 }
 
 input NewVideo {
@@ -416,6 +374,8 @@ input NewVideo {
     description: String!
     userId: ID!
     url: String!
+    screenshotIds: [ID]
+    relatedIds: [ID]
 }
 
 input NewUser {
@@ -437,7 +397,7 @@ type Subscription {
     videoPublished: Video!
 }
 
-scalar Timestamp
+scalar DateTime
 
 directive @hasRole(role: [Role!]!) on FIELD_DEFINITION
 
@@ -740,87 +700,6 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋsantileiraᚋgoᚑgraphqlᚋvendorᚋgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Screenshot_id(ctx context.Context, field graphql.CollectedField, obj *models.Screenshot) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "Screenshot",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNID2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Screenshot_videoId(ctx context.Context, field graphql.CollectedField, obj *models.Screenshot) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "Screenshot",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.VideoID, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNID2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Screenshot_url(ctx context.Context, field graphql.CollectedField, obj *models.Screenshot) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "Screenshot",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.URL, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Subscription_videoPublished(ctx context.Context, field graphql.CollectedField) func() graphql.Marshaler {
 	ctx = graphql.WithResolverContext(ctx, &graphql.ResolverContext{
 		Field: field,
@@ -1089,31 +968,7 @@ func (ec *executionContext) _Video_createdAt(ctx context.Context, field graphql.
 	res := resTmp.(time.Time)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNTimestamp2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Video_screenshots(ctx context.Context, field graphql.CollectedField, obj *models.Video) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "Video",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Screenshots, nil
-	})
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*models.Screenshot)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOScreenshot2ᚕᚖgithubᚗcomᚋsantileiraᚋgoᚑgraphqlᚋapiᚋmodelsᚐScreenshot(ctx, field.Selections, res)
+	return ec.marshalNDateTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Video_related(ctx context.Context, field graphql.CollectedField, obj *models.Video) graphql.Marshaler {
@@ -2035,6 +1890,18 @@ func (ec *executionContext) unmarshalInputNewVideo(ctx context.Context, v interf
 			if err != nil {
 				return it, err
 			}
+		case "screenshotIds":
+			var err error
+			it.ScreenshotIds, err = ec.unmarshalOID2ᚕᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "relatedIds":
+			var err error
+			it.RelatedIds, err = ec.unmarshalOID2ᚕᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -2132,43 +1999,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
 			out.Values[i] = ec._Query___schema(ctx, field)
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var screenshotImplementors = []string{"Screenshot"}
-
-func (ec *executionContext) _Screenshot(ctx context.Context, sel ast.SelectionSet, obj *models.Screenshot) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, screenshotImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Screenshot")
-		case "id":
-			out.Values[i] = ec._Screenshot_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "videoId":
-			out.Values[i] = ec._Screenshot_videoId(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "url":
-			out.Values[i] = ec._Screenshot_url(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2287,8 +2117,6 @@ func (ec *executionContext) _Video(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "screenshots":
-			out.Values[i] = ec._Video_screenshots(ctx, field, obj)
 		case "related":
 			out.Values[i] = ec._Video_related(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -2564,12 +2392,26 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) unmarshalNDateTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	return models.UnmarshalDateTime(v)
+}
+
+func (ec *executionContext) marshalNDateTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	res := models.MarshalDateTime(v)
+	if res == graphql.Null {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNID2int(ctx context.Context, v interface{}) (int, error) {
-	return models.UnmarshalID(v)
+	return graphql.UnmarshalIntID(v)
 }
 
 func (ec *executionContext) marshalNID2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
-	res := models.MarshalID(v)
+	res := graphql.MarshalIntID(v)
 	if res == graphql.Null {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -2658,20 +2500,6 @@ func (ec *executionContext) unmarshalNString2string(ctx context.Context, v inter
 
 func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalString(v)
-	if res == graphql.Null {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) unmarshalNTimestamp2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
-	return models.UnmarshalTimestamp(v)
-}
-
-func (ec *executionContext) marshalNTimestamp2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
-	res := models.MarshalTimestamp(v)
 	if res == graphql.Null {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -3031,6 +2859,61 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
 }
 
+func (ec *executionContext) unmarshalOID2int(ctx context.Context, v interface{}) (int, error) {
+	return graphql.UnmarshalIntID(v)
+}
+
+func (ec *executionContext) marshalOID2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	return graphql.MarshalIntID(v)
+}
+
+func (ec *executionContext) unmarshalOID2ᚕᚖint(ctx context.Context, v interface{}) ([]*int, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*int, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalOID2ᚖint(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOID2ᚕᚖint(ctx context.Context, sel ast.SelectionSet, v []*int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalOID2ᚖint(ctx, sel, v[i])
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOID2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOID2int(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOID2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec.marshalOID2int(ctx, sel, *v)
+}
+
 func (ec *executionContext) unmarshalOInt2int(ctx context.Context, v interface{}) (int, error) {
 	return graphql.UnmarshalInt(v)
 }
@@ -3052,57 +2935,6 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 	return ec.marshalOInt2int(ctx, sel, *v)
-}
-
-func (ec *executionContext) marshalOScreenshot2githubᚗcomᚋsantileiraᚋgoᚑgraphqlᚋapiᚋmodelsᚐScreenshot(ctx context.Context, sel ast.SelectionSet, v models.Screenshot) graphql.Marshaler {
-	return ec._Screenshot(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOScreenshot2ᚕᚖgithubᚗcomᚋsantileiraᚋgoᚑgraphqlᚋapiᚋmodelsᚐScreenshot(ctx context.Context, sel ast.SelectionSet, v []*models.Screenshot) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		rctx := &graphql.ResolverContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOScreenshot2ᚖgithubᚗcomᚋsantileiraᚋgoᚑgraphqlᚋapiᚋmodelsᚐScreenshot(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalOScreenshot2ᚖgithubᚗcomᚋsantileiraᚋgoᚑgraphqlᚋapiᚋmodelsᚐScreenshot(ctx context.Context, sel ast.SelectionSet, v *models.Screenshot) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Screenshot(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
