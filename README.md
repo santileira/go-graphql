@@ -13,7 +13,8 @@ I will use a video publishing site as an example in which a user can publish a v
 
 ## Definitions
 
-Video schema has an user but i only fetch the user if it is requested.
+- Video schema has an user but i only fetch the user if it is requested.
+- Scalar type `DateTime` with format `2006-01-02 15:04:05`.
 
 ## Users
 
@@ -103,9 +104,6 @@ query{
     }
     url
     createdAt
-    related{
-      id
-    }
   }
 }
 ```
@@ -124,8 +122,7 @@ query{
           "email": "claudio@gmail.com_5577006791947779410"
         },
         "url": "Url Video Claudio Leira",
-        "createdAt": 1564489100000,
-        "related": []
+        "createdAt": 1564489100000
       }
     ]
   }
@@ -148,7 +145,7 @@ mutation{
     name: "Video Claudio Leira",
     description: "Description Video Claudio Leira"
     userId: 5577006791947779410
-		url:"Url Video Claudio Leira"
+	url:"Url Video Claudio Leira"
   }) {
     id
     name
@@ -160,9 +157,6 @@ mutation{
     }
     url
     createdAt
-    related {
-      id
-    }
   }
 }
 ```
@@ -180,14 +174,41 @@ mutation{
         "email": "claudio@gmail.com_5577006791947779410"
       },
       "url": "Url Video Claudio Leira",
-      "createdAt": 1564489100000,
-      "related": []
+      "createdAt": "2019-07-31 19:42:34"
     }
   }
 }
 ```
 
 ### Subscription
+
+I subscribe to videos creation, when video is created i receive it.
+The library (gqlgen) provides web socket-based real-time subscription events.
+
+`http://localhost:8080/query`
+
+```
+subscription{
+  videoCreated{
+     id
+    name
+    description
+    user {
+      id
+      name
+      email
+    }
+    url
+    createdAt
+  }
+}
+```
+
+## Authentication
+
+
+
+## Data Loader
 
 ## Library used
 

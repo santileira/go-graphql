@@ -59,7 +59,7 @@ type ComplexityRoot struct {
 	}
 
 	Subscription struct {
-		VideoPublished func(childComplexity int) int
+		VideoCreated func(childComplexity int) int
 	}
 
 	User struct {
@@ -73,7 +73,6 @@ type ComplexityRoot struct {
 		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
-		Related     func(childComplexity int, limit *int, offset *int) int
 		URL         func(childComplexity int) int
 		User        func(childComplexity int) int
 	}
@@ -88,7 +87,7 @@ type QueryResolver interface {
 	Users(ctx context.Context) ([]*models.User, error)
 }
 type SubscriptionResolver interface {
-	VideoPublished(ctx context.Context) (<-chan *models.Video, error)
+	VideoCreated(ctx context.Context) (<-chan *models.Video, error)
 }
 type VideoResolver interface {
 	User(ctx context.Context, obj *models.Video) (*models.User, error)
@@ -147,12 +146,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Videos(childComplexity), true
 
-	case "Subscription.videoPublished":
-		if e.complexity.Subscription.VideoPublished == nil {
+	case "Subscription.videoCreated":
+		if e.complexity.Subscription.VideoCreated == nil {
 			break
 		}
 
-		return e.complexity.Subscription.VideoPublished(childComplexity), true
+		return e.complexity.Subscription.VideoCreated(childComplexity), true
 
 	case "User.email":
 		if e.complexity.User.Email == nil {
@@ -202,18 +201,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Video.Name(childComplexity), true
-
-	case "Video.related":
-		if e.complexity.Video.Related == nil {
-			break
-		}
-
-		args, err := ec.field_Video_related_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Video.Related(childComplexity, args["limit"].(*int), args["offset"].(*int)), true
 
 	case "Video.url":
 		if e.complexity.Video.URL == nil {
@@ -360,7 +347,6 @@ var parsedSchema = gqlparser.MustLoadSchema(
     user: User!
     url: String!
     createdAt: DateTime!
-    related(limit: Int = 25, offset: Int = 0): [Video!]!
 }
 
 type User {
@@ -374,8 +360,6 @@ input NewVideo {
     description: String!
     userId: ID!
     url: String!
-    screenshotIds: [ID]
-    relatedIds: [ID]
 }
 
 input NewUser {
@@ -394,7 +378,7 @@ type Query {
 }
 
 type Subscription {
-    videoPublished: Video!
+    videoCreated: Video!
 }
 
 scalar DateTime
@@ -466,28 +450,6 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Video_related_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *int
-	if tmp, ok := rawArgs["limit"]; ok {
-		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["limit"] = arg0
-	var arg1 *int
-	if tmp, ok := rawArgs["offset"]; ok {
-		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["offset"] = arg1
 	return args, nil
 }
 
@@ -700,7 +662,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋsantileiraᚋgoᚑgraphqlᚋvendorᚋgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Subscription_videoPublished(ctx context.Context, field graphql.CollectedField) func() graphql.Marshaler {
+func (ec *executionContext) _Subscription_videoCreated(ctx context.Context, field graphql.CollectedField) func() graphql.Marshaler {
 	ctx = graphql.WithResolverContext(ctx, &graphql.ResolverContext{
 		Field: field,
 		Args:  nil,
@@ -708,7 +670,7 @@ func (ec *executionContext) _Subscription_videoPublished(ctx context.Context, fi
 	// FIXME: subscriptions are missing request middleware stack https://github.com/99designs/gqlgen/issues/259
 	//          and Tracer stack
 	rctx := ctx
-	results, err := ec.resolvers.Subscription().VideoPublished(rctx)
+	results, err := ec.resolvers.Subscription().VideoCreated(rctx)
 	if err != nil {
 		ec.Error(ctx, err)
 		return nil
@@ -969,40 +931,6 @@ func (ec *executionContext) _Video_createdAt(ctx context.Context, field graphql.
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNDateTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Video_related(ctx context.Context, field graphql.CollectedField, obj *models.Video) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "Video",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Video_related_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Related, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*models.Video)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNVideo2ᚕᚖgithubᚗcomᚋsantileiraᚋgoᚑgraphqlᚋapiᚋmodelsᚐVideo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) graphql.Marshaler {
@@ -1890,18 +1818,6 @@ func (ec *executionContext) unmarshalInputNewVideo(ctx context.Context, v interf
 			if err != nil {
 				return it, err
 			}
-		case "screenshotIds":
-			var err error
-			it.ScreenshotIds, err = ec.unmarshalOID2ᚕᚖint(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "relatedIds":
-			var err error
-			it.RelatedIds, err = ec.unmarshalOID2ᚕᚖint(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		}
 	}
 
@@ -2023,8 +1939,8 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	}
 
 	switch fields[0].Name {
-	case "videoPublished":
-		return ec._Subscription_videoPublished(ctx, fields[0])
+	case "videoCreated":
+		return ec._Subscription_videoCreated(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
@@ -2114,11 +2030,6 @@ func (ec *executionContext) _Video(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "createdAt":
 			out.Values[i] = ec._Video_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "related":
-			out.Values[i] = ec._Video_related(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
@@ -2857,84 +2768,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
-}
-
-func (ec *executionContext) unmarshalOID2int(ctx context.Context, v interface{}) (int, error) {
-	return graphql.UnmarshalIntID(v)
-}
-
-func (ec *executionContext) marshalOID2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
-	return graphql.MarshalIntID(v)
-}
-
-func (ec *executionContext) unmarshalOID2ᚕᚖint(ctx context.Context, v interface{}) ([]*int, error) {
-	var vSlice []interface{}
-	if v != nil {
-		if tmp1, ok := v.([]interface{}); ok {
-			vSlice = tmp1
-		} else {
-			vSlice = []interface{}{v}
-		}
-	}
-	var err error
-	res := make([]*int, len(vSlice))
-	for i := range vSlice {
-		res[i], err = ec.unmarshalOID2ᚖint(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalOID2ᚕᚖint(ctx context.Context, sel ast.SelectionSet, v []*int) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalOID2ᚖint(ctx, sel, v[i])
-	}
-
-	return ret
-}
-
-func (ec *executionContext) unmarshalOID2ᚖint(ctx context.Context, v interface{}) (*int, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalOID2int(ctx, v)
-	return &res, err
-}
-
-func (ec *executionContext) marshalOID2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec.marshalOID2int(ctx, sel, *v)
-}
-
-func (ec *executionContext) unmarshalOInt2int(ctx context.Context, v interface{}) (int, error) {
-	return graphql.UnmarshalInt(v)
-}
-
-func (ec *executionContext) marshalOInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
-	return graphql.MarshalInt(v)
-}
-
-func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalOInt2int(ctx, v)
-	return &res, err
-}
-
-func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec.marshalOInt2int(ctx, sel, *v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

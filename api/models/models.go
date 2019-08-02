@@ -10,12 +10,6 @@ import (
 	"time"
 )
 
-type Screenshot struct {
-	ID      int    `json:"id"`
-	VideoID int    `json:"videoId"`
-	URL     string `json:"url"`
-}
-
 type User struct {
 	ID    int    `json:"id"`
 	Name  string `json:"name"`
@@ -29,7 +23,6 @@ type Video struct {
 	UserID      int       `json:"-"`
 	URL         string    `json:"url"`
 	CreatedAt   time.Time `json:"createdAt"`
-	Related     []*Video  `json:"related"`
 }
 
 func MarshalID(id int) graphql.Marshaler {
@@ -60,5 +53,5 @@ func UnmarshalDateTime(v interface{}) (time.Time, error) {
 		tmpTime, _ := time.Parse(layoutFormat, tmpStr)
 		return tmpTime, nil
 	}
-	return time.Time{}, errors.TimeStampError
+	return time.Time{}, errors.DateTimeError
 }

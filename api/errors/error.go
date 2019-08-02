@@ -5,11 +5,11 @@ import (
 )
 
 var (
-	TimeStampError = GenerateError("time should be a unix timestamp")
-	UnauthorizedError = GenerateError("you are not authorized yo perform this action")
-
+	DateTimeError     = GenerateError("time should be a string date")
+	UnauthorizedError = GenerateError("you are not authorized to perform this action")
 )
 
+// GenerateError returns error with that string.
 func GenerateError(err string) error {
 	return errors.New(err)
 }

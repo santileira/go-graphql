@@ -2,8 +2,10 @@ package database
 
 import "github.com/santileira/go-graphql/api/models"
 
+// videos collection in memory
 var videos []*models.Video
 
+// init creates storage in memory
 func init() {
 	videos = make([]*models.Video, 0)
 }

@@ -13,10 +13,12 @@ import (
 	"time"
 ) // THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
 
-var videoPublishedChannel map[string]chan *models.Video
+// createdVideosObservers contains all the observers with your specific id.
+var createdVideosObservers map[string]chan *models.Video
 
+// init initializes created videos observers variable.
 func init() {
-	videoPublishedChannel = map[string]chan *models.Video{}
+	createdVideosObservers = map[string]chan *models.Video{}
 }
 
 type Resolver struct {
@@ -74,13 +76,13 @@ func (r *mutationResolver) CreateVideo(ctx context.Context, input NewVideo) (*mo
 
 	fmt.Println(fmt.Printf("Create video %s", string(videoJSON)))
 
-	/*
+
 	// notify new video
-	// add new video in videoPublishedChannel
-	for _, observer := range videoPublishedChannel {
+	// add new video in createdVideosObservers
+	for _, observer := range createdVideosObservers {
 		observer <- video
 		// this sends new video to client via socket
-	}*/
+	}
 
 	return video, nil
 }
@@ -117,13 +119,15 @@ type queryResolver struct {
 	*Resolver
 }
 
+// Videos returns videos and error.
 func (r *queryResolver) Videos(ctx context.Context) ([]*models.Video, error) {
-	fmt.Println("Devolviendo videos")
+	fmt.Println("Returning videos")
 	return database.Videos(), nil
 }
 
+// Users returns users and error.
 func (r *queryResolver) Users(ctx context.Context) ([]*models.User, error) {
-	fmt.Println("Devolviendo usuarios")
+	fmt.Println("Returning users")
 	return database.Users(), nil
 }
 
@@ -132,18 +136,17 @@ type videoResolver struct {
 	*Resolver
 }
 
-func (r *videoResolver) User(ctx context.Context, obj *models.Video) (*models.User, error) {
-	fmt.Println("Devolviendo usuario a partir de video")
-	/*var userResult *models.User
-	for _, user := range database.Users() {
-		if user.ID == obj.UserID {
-			userResult = user
-			break
-		}
+// User returns user by user id in video.
+func (r *videoResolver) User(ctx context.Context, video *models.Video) (*models.User, error) {
+
+	fmt.Println("Returning user by video")
+
+	user, err := userdataloader.ForContext(ctx).Load(video.UserID)
+	if err != nil {
+		fmt.Println(fmt.Printf("Error searching user %s", err.Error()))
+		return nil, err
 	}
 
-	return userResult, nil*/
-	user, err := userdataloader.ForContext(ctx).Load(obj.UserID)
 	return &user, err
 }
 
@@ -152,27 +155,22 @@ type subscriptionResolver struct {
 	*Resolver
 }
 
-func (r *subscriptionResolver) VideoPublished(ctx context.Context) (<-chan *models.Video, error) {
-	fmt.Println("Subscribiendome a la creación de un video")
-	id := randString(8)
+// VideoCreated creates video channel and returns it.
+// When context is done, deletes the channel.
+func (r *subscriptionResolver) VideoCreated(ctx context.Context) (<-chan *models.Video, error) {
+	fmt.Println("Subscribing me to creation of videos")
 
-	videoEvent := make(chan *models.Video, 1)
+	id := rand.Int()
+	idStr := strconv.Itoa(id)
+	videoCreatedChannel := make(chan *models.Video, 1)
+
 	go func() {
 		<-ctx.Done()
-		delete(videoPublishedChannel, id)
+		fmt.Println("Closing subscription")
+		delete(createdVideosObservers, idStr)
 	}()
 
-	videoPublishedChannel[id] = videoEvent
+	createdVideosObservers[idStr] = videoCreatedChannel
 
-	return videoEvent, nil
-}
-
-var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-func randString(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-	return string(b)
+	return videoCreatedChannel, nil
 }

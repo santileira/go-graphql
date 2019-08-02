@@ -14,12 +14,10 @@ type NewUser struct {
 }
 
 type NewVideo struct {
-	Name          string `json:"name"`
-	Description   string `json:"description"`
-	UserID        int    `json:"userId"`
-	URL           string `json:"url"`
-	ScreenshotIds []*int `json:"screenshotIds"`
-	RelatedIds    []*int `json:"relatedIds"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	UserID      int    `json:"userId"`
+	URL         string `json:"url"`
 }
 
 type Role string

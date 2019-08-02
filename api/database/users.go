@@ -2,8 +2,10 @@ package database
 
 import "github.com/santileira/go-graphql/api/models"
 
+// users collection
 var users []*models.User
 
+// init creates storage in memory
 func init() {
 	users = make([]*models.User, 0)
 }
