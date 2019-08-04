@@ -58,8 +58,9 @@ func main() {
 	config.Complexity.Query.Videos = countComplexity
 */
 
-	// auth middleware gets value from header "Role" and put it in the context
+	// Auth middleware gets value from header "Role" and put it in the context
 	router.Use(auth.Middleware())
+
 	router.Use(userdataloader.Middleware())
 
 	router.Handle("/", handler.Playground("GraphQL playground", "/query"))
@@ -73,5 +74,6 @@ func main() {
 	)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", defaultPort)
+	// Start server
 	log.Fatal(http.ListenAndServe(":"+defaultPort, router))
 }
