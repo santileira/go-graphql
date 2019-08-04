@@ -27,13 +27,20 @@ func main() {
 
 	config := go_graphql.Config{Resolvers: &go_graphql.Resolver{}}
 
+	// Authentication
+	// Verifies if the role in the context is in the list of roles that can perform this action.
+	// This verification is very easy and silly, but you can do a very complexity authentication.
 	config.Directives.HasRole = func(ctx context.Context, obj interface{}, next graphql.Resolver, roles []go_graphql.Role) (interface{}, error) {
+
+		// Gets role for the context.
 		roleForContext := auth.ForContext(ctx)
 
+		// Returns error if not exists role for this action.
 		if roleForContext == nil {
 			return nil, errors.UnauthorizedError
 		}
 
+		// If roleForContext is in the list of roles that can perform this action, continues with the next handler, else return error.
 		for _, role := range roles {
 			if role == *roleForContext {
 				return next(ctx)
@@ -51,6 +58,7 @@ func main() {
 	config.Complexity.Query.Videos = countComplexity
 */
 
+	// auth middleware gets value from header "Role" and put it in the context
 	router.Use(auth.Middleware())
 	router.Use(userdataloader.Middleware())
 

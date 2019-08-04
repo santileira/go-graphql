@@ -6,7 +6,7 @@ import (
 
 var (
 	DateTimeError     = GenerateError("time should be a string date")
-	UnauthorizedError = GenerateError("you are not authorized to perform this action")
+	UnauthorizedError = GenerateError("you aren't authorized to perform this action")
 )
 
 // GenerateError returns error with that string.

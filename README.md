@@ -22,8 +22,10 @@ I will use a video publishing site as an example in which a user can publish a v
 
 Gets users in database.
 
+`URL:`
 `http://localhost:8080/query`
 
+`BODY:`
 ```
 query{
   Users{
@@ -34,6 +36,7 @@ query{
 }
 ```
 
+`RESPONSE:`
 ```
 {
   "data": {
@@ -56,8 +59,10 @@ Parameters:
 - name (string): required
 - email (string): required
 
+`URL:`
 `http://localhost:8080/query`
 
+`BODY:`
 ```
 mutation{
      createUser(user:{
@@ -71,6 +76,7 @@ mutation{
    }
 ```
 
+`RESPONSE:`
 ```
 {
   "data": {
@@ -89,8 +95,10 @@ mutation{
 
 Gets videos in database.
 
+`URL:`
 `http://localhost:8080/query`
 
+`BODY:`
 ```
 query{
   Videos{
@@ -108,6 +116,7 @@ query{
 }
 ```
 
+`RESPONSE:`
 ```
 {
   "data": {
@@ -137,8 +146,10 @@ Parameters:
 - name (string): required
 - email (string): required
 
+`URL:`
 `http://localhost:8080/query`
 
+`BODY:`
 ```
 mutation{
   createVideo(input:{
@@ -161,6 +172,15 @@ mutation{
 }
 ```
 
+`HEADERS:`
+```
+{
+  "Role": "ADMIN"
+}
+```
+
+
+`RESPONSE:`
 ```
 {
   "data": {
@@ -180,13 +200,31 @@ mutation{
 }
 ```
 
+If user id not exists this is the response:
+
+```
+{
+  "errors": [
+    {
+      "message": "user not exists",
+      "path": [
+        "createVideo"
+      ]
+    }
+  ],
+  "data": null
+}
+```
+
 ### Subscription
 
 I subscribe to videos creation, when video is created i receive it.
 The library (gqlgen) provides web socket-based real-time subscription events.
 
+`URL`
 `http://localhost:8080/query`
 
+`BODY:`
 ```
 subscription{
   videoCreated{
@@ -204,9 +242,82 @@ subscription{
 }
 ```
 
+`REPSONSE:`
+```
+{
+  "data": {
+    "createVideo": {
+      "id": "8674665223082153551",
+      "name": "Video Claudio Leira",
+      "description": "Description Video Claudio Leira",
+      "user": {
+        "id": "5577006791947779410",
+        "name": "Claudio Leira_5577006791947779410",
+        "email": "claudio@gmail.com_5577006791947779410"
+      },
+      "url": "Url Video Claudio Leira",
+      "createdAt": "2019-08-02 20:59:10"
+    }
+  }
+}
+```
+
 ## Authentication
 
+In GraphQL only one endpoint is exposed, in this case `http://localhost:8080/query`, so you can achieve authorization with schema directives.
 
+`createVideo` mutation has directive `hasRole(ADMIN, USER)`, so only roles admin and user can create videos, else returns not authorized error.
+
+To execute `createVideo` you must pass header `"Role": "ADMIN"` or `"Role": "ADMIN"`. This verification is very easy and silly, but you can do a very complexity authentication.
+
+`URL:`
+`http://localhost:8080/query`
+
+`BODY:`
+```
+mutation{
+  createVideo(input:{
+    name: "Video Claudio Leira",
+    description: "Description Video Claudio Leira"
+    userId: 5577006791947779410
+	url:"Url Video Claudio Leira"
+  }) {
+    id
+    name
+    description
+    user {
+      id
+      name
+      email
+    }
+    url
+    createdAt
+  }
+}
+```
+
+`HEADERS:`
+```
+{
+  "Role": "TEST"
+}
+```
+
+
+`RESPONSE:`
+```
+{
+  "errors": [
+    {
+      "message": "you aren't authorized to perform this action",
+      "path": [
+        "createVideo"
+      ]
+    }
+  ],
+  "data": null
+}
+```
 
 ## Data Loader
 

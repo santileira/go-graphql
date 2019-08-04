@@ -9,13 +9,14 @@ import (
 
 // A private key for context that only this package can access. This is important
 // to prevent collisions between different context uses
-var roleCtxKey = &contextKey{"Role"}
+var roleCtxKey = &contextKey{name: "Role"}
 
+// contextKey structure to store value of header Role
 type contextKey struct {
 	name string
 }
 
-// Middleware decodes the share session cookie and packs the session into context
+// Middleware decodes the header with key "Role" and put value in the context with key "Role".
 func Middleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -25,8 +26,6 @@ func Middleware() func(http.Handler) http.Handler {
 			if role != "" {
 				var roleGoGraphQL go_graphql.Role
 				roleGoGraphQL = go_graphql.Role(role)
-				// Write your fancy token introspection logic here and if valid user then pass appropriate key in header
-				// IMPORTANT: DO NOT HANDLE UNAUTHORISED USER HERE
 				ctx = context.WithValue(ctx, roleCtxKey, &roleGoGraphQL)
 			}
 			// and call the next with our new context
@@ -35,7 +34,7 @@ func Middleware() func(http.Handler) http.Handler {
 	}
 }
 
-// ForContext finds the role from the context. REQUIRES Middleware to have run.
+// ForContext finds the role from the context.
 func ForContext(ctx context.Context) *go_graphql.Role {
 	raw, _ := ctx.Value(roleCtxKey).(*go_graphql.Role)
 	return raw
