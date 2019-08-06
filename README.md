@@ -319,7 +319,35 @@ mutation{
 }
 ```
 
-## Data Loader
+## Data loaders
+
+I am loading data when needed. Clients have the control of the data, there is no underfetching and no overfetching but everything comes with a cost.
+
+I will show an example to understand the data cost:
+
+```
+query{
+  Videos{
+      name
+      user{
+        name
+      }
+  }
+}
+```
+
+If we have 10 videos entries and only 5 differents users. We will do 11 queries, 1 to videos table and 10 to users table.
+
+This is known as the `N+1` problem. There will be one query to get all the data and for each data (N) there will be another database query.
+
+Dataloaders will solve this problem. I will use dataloaden (https://github.com/vektah/dataloaden) library from the author of gqlgen.
+
+I will generate the user data loader with the next command: `go run github.com/vektah/dataloaden UserLoader int github.com/santileira/go-graphql/api/models.User`
+
+This will generate a dataloader called `UserLoader` that looks for `github.com/santileira/go-graphql/api/models.User` objects based on an `int` key.
+
+I need to define the `Fetch` method to get the result in bulk. I am waiting for 1ms for a user to load queries and i have kept a maximum batch of 10 queries. So now, instead of firing a query for each user, dataloader will wait for either 1 millisecond for 10 users before hitting the database.
+
 
 ## Library used
 

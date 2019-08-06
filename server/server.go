@@ -61,6 +61,7 @@ func main() {
 	// Auth middleware gets value from header "Role" and put it in the context
 	router.Use(auth.Middleware())
 
+	// User data loader middleware generates user data loader and put it in the context
 	router.Use(userdataloader.Middleware())
 
 	router.Handle("/", handler.Playground("GraphQL playground", "/query"))
