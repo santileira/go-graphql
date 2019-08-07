@@ -58,7 +58,7 @@ func main() {
 
 	router.Handle("/", handler.Playground("GraphQL playground", "/query"))
 	router.Handle("/query", c.Handler(handler.GraphQL(go_graphql.NewExecutableSchema(config),
-		handler.ComplexityLimit(10),
+		handler.ComplexityLimit(10), // complexity
 		handler.WebsocketUpgrader(websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true
