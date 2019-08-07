@@ -2,7 +2,7 @@
 
 This repository has a proof of concept about graphql.
 
-I will use a video publishing site as an example in which a user can publish a video, add users, add screenshots and get videos and users.
+I will use a video publishing site as an example in which a user can publish a video, add users and get videos and users.
 
 ## Getting started
 
@@ -348,7 +348,6 @@ This will generate a dataloader called `UserLoader` that looks for `github.com/s
 
 I need to define the `Fetch` method to get the result in bulk. I am waiting for 1ms for a user to load queries and i have kept a maximum batch of 10 queries. So now, instead of firing a query for each user, dataloader will wait for either 1 millisecond for 10 users before hitting the database.
 
-
 ## Query complexity
 
 In GraphQL you are giving a powerful way for the client to fetch whatever they need, but this exposes you to the risk of denial of service attacks.
@@ -358,6 +357,7 @@ For example, if i have a related field in video type which returns related video
 Library gqlgen assigns fix complexity weight for each field so it will consider struct, array, and string all as equals.
 
 For this example, complexity limit is 100.
+
 ## Library used
 
 gqlgen (https://github.com/99designs/gqlgen)
@@ -366,27 +366,10 @@ gqlgen (https://github.com/99designs/gqlgen)
 
 Thunder, graphql and graphql-go
 
-## Steps
+## Bibliography
 
-dep init
-
-go run scripts/gqlgen.go init (generates all the boring (but interesting for a few) skeleton code)
-
-which will create the following files:
-
-gqlgen.yml — Config file to control code generation.
-generated.go — The generated code which you might not want to see.
-models_gen.go — All the models for input and type of your provided schema.
-resolver.go — You need to write your implementations.
-server/server.go — entry point with an http.Handler to start the GraphQL server.
-
-generates new models and marshal and unmarshal
-
-modify gqlgen.yml
-
-Regenerate the code by running: go run scripts/gqlgen.go -v.
-
-
-generate dataloader: `go run github.com/vektah/dataloaden UserLoader string github.com/santileira/go-graphql/api/models.User`
-
+- https://www.freecodecamp.org/news/deep-dive-into-graphql-with-golang-d3e02a429ac3/
+- https://gqlgen.com/
+- https://github.com/99designs/gqlgen
+- https://github.com/vektah/dataloaden
 
