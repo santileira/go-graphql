@@ -49,14 +49,6 @@ func main() {
 
 		return nil, errors.UnauthorizedError
 	}
-/*
-	// Complexity
-	countComplexity := func(childComplexity int) int {
-		return 1
-	}
-
-	config.Complexity.Query.Videos = countComplexity
-*/
 
 	// Auth middleware gets value from header "Role" and put it in the context
 	router.Use(auth.Middleware())
@@ -66,7 +58,7 @@ func main() {
 
 	router.Handle("/", handler.Playground("GraphQL playground", "/query"))
 	router.Handle("/query", c.Handler(handler.GraphQL(go_graphql.NewExecutableSchema(config),
-		handler.ComplexityLimit(100),
+		handler.ComplexityLimit(10),
 		handler.WebsocketUpgrader(websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true

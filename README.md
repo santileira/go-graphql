@@ -349,6 +349,15 @@ This will generate a dataloader called `UserLoader` that looks for `github.com/s
 I need to define the `Fetch` method to get the result in bulk. I am waiting for 1ms for a user to load queries and i have kept a maximum batch of 10 queries. So now, instead of firing a query for each user, dataloader will wait for either 1 millisecond for 10 users before hitting the database.
 
 
+## Query complexity
+
+In GraphQL you are giving a powerful way for the client to fetch whatever they need, but this exposes you to the risk of denial of service attacks.
+
+For example, if i have a related field in video type which returns related videos. And each related video is of the graphql video type so they all have related videos too… and this goes on.
+
+Library gqlgen assigns fix complexity weight for each field so it will consider struct, array, and string all as equals.
+
+For this example, complexity limit is 100.
 ## Library used
 
 gqlgen (https://github.com/99designs/gqlgen)
